@@ -50,7 +50,7 @@ function Get-LiveProxyRules {
 }
 
 function Sync-Rules {
-    $rules = Load-Rules
+    $rules = @(Load-Rules)
     $live = Get-LiveProxyRules
     $livePorts = @($live | ForEach-Object { $_.listenPort })
 
@@ -234,7 +234,7 @@ $btnAdd.Add_Click({
 
         New-NetFirewallRule -DisplayName "SSHRelay-$name" -Direction Inbound -Protocol TCP -LocalPort $listenPort -RemoteAddress Any -Action Allow -ErrorAction Stop | Out-Null
 
-        $rules = Load-Rules
+        $rules = @(Load-Rules)
         $rules += [PSCustomObject]@{
             name        = $name
             ipv6        = $ipv6Text
@@ -271,7 +271,7 @@ $btnDelete.Add_Click({
         # Imported rules (created before this tool existed) never had a matching firewall rule to begin with.
         Remove-NetFirewallRule -DisplayName "SSHRelay-$name" -ErrorAction SilentlyContinue | Out-Null
 
-        $rules = Load-Rules | Where-Object { $_.name -ne $name }
+        $rules = @(Load-Rules | Where-Object { $_.name -ne $name })
         Save-Rules $rules
 
         Refresh-ListView
