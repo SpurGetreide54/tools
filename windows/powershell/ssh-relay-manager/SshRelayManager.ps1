@@ -204,13 +204,20 @@ $lblStatus.Location = New-Object System.Drawing.Point(12, 440)
 $lblStatus.Size = New-Object System.Drawing.Size(600, 40)
 $form.Controls.Add($lblStatus)
 
-$lblCopyright = New-Object System.Windows.Forms.Label
+$lblCopyright = New-Object System.Windows.Forms.LinkLabel
 $lblCopyright.Text = "SSH Relay Manager v$(Get-ToolVersion) - Copyright (C) 2026 SpurGetreide54"
 $lblCopyright.Location = New-Object System.Drawing.Point(12, 485)
 $lblCopyright.Size = New-Object System.Drawing.Size(600, 16)
 $lblCopyright.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
-$lblCopyright.ForeColor = [System.Drawing.SystemColors]::GrayText
+$lblCopyright.LinkArea = New-Object System.Windows.Forms.LinkArea(0, $lblCopyright.Text.Length)
 $lblCopyright.Font = New-Object System.Drawing.Font($lblCopyright.Font.FontFamily, 7.5)
+$lblCopyright.Add_LinkClicked({
+    try {
+        Start-Process 'https://github.com/SpurGetreide54/tools/tree/main/windows/powershell/ssh-relay-manager'
+    } catch {
+        Set-Status "Error: $($_.Exception.Message)" -IsError
+    }
+})
 $form.Controls.Add($lblCopyright)
 
 function Set-Status {
