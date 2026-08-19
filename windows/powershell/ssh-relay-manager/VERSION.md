@@ -1,7 +1,7 @@
 # Version
 
-0.1.1
+0.1.2
 
 ## State
 
-Release. Built, deployed, and verified working end-to-end.
+Unverified. Rename/port-edit and sortable columns added; not yet tested on Windows.
