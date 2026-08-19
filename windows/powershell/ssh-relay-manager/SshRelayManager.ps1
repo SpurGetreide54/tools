@@ -113,13 +113,19 @@ function Set-DefaultButtonStyle {
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'SSH Relay Manager'
 $form.Size = New-Object System.Drawing.Size(640, 545)
+$form.MinimumSize = New-Object System.Drawing.Size(520, 460)
 $form.StartPosition = 'CenterScreen'
-$form.FormBorderStyle = 'FixedDialog'
-$form.MaximizeBox = $false
+$form.FormBorderStyle = 'Sizable'
+$form.MaximizeBox = $true
+
+$anchorFill = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right -bor [System.Windows.Forms.AnchorStyles]::Bottom
+$anchorBottomLeft = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left
+$anchorBottomStretch = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
 
 $listView = New-Object System.Windows.Forms.ListView
 $listView.Location = New-Object System.Drawing.Point(12, 12)
 $listView.Size = New-Object System.Drawing.Size(600, 220)
+$listView.Anchor = $anchorFill
 $listView.View = 'Details'
 $listView.FullRowSelect = $true
 $listView.GridLines = $true
@@ -134,12 +140,14 @@ $btnRefresh = New-Object System.Windows.Forms.Button
 $btnRefresh.Text = 'Refresh'
 $btnRefresh.Location = New-Object System.Drawing.Point(12, 240)
 $btnRefresh.Size = New-Object System.Drawing.Size(90, 28)
+$btnRefresh.Anchor = $anchorBottomLeft
 $form.Controls.Add($btnRefresh)
 
 $btnDelete = New-Object System.Windows.Forms.Button
 $btnDelete.Text = 'Delete Selected'
 $btnDelete.Location = New-Object System.Drawing.Point(110, 240)
 $btnDelete.Size = New-Object System.Drawing.Size(120, 28)
+$btnDelete.Anchor = $anchorBottomLeft
 Set-DestructiveButtonStyle $btnDelete
 $form.Controls.Add($btnDelete)
 
@@ -147,12 +155,14 @@ $btnEdit = New-Object System.Windows.Forms.Button
 $btnEdit.Text = 'Edit Selected'
 $btnEdit.Location = New-Object System.Drawing.Point(240, 240)
 $btnEdit.Size = New-Object System.Drawing.Size(120, 28)
+$btnEdit.Anchor = $anchorBottomLeft
 $form.Controls.Add($btnEdit)
 
 $groupBox = New-Object System.Windows.Forms.GroupBox
 $groupBox.Text = 'Add Rule'
 $groupBox.Location = New-Object System.Drawing.Point(12, 280)
 $groupBox.Size = New-Object System.Drawing.Size(600, 150)
+$groupBox.Anchor = $anchorBottomStretch
 $form.Controls.Add($groupBox)
 
 $lblName = New-Object System.Windows.Forms.Label
@@ -219,12 +229,14 @@ $groupBox.Controls.Add($btnClear)
 $lblStatus = New-Object System.Windows.Forms.Label
 $lblStatus.Location = New-Object System.Drawing.Point(12, 440)
 $lblStatus.Size = New-Object System.Drawing.Size(600, 40)
+$lblStatus.Anchor = $anchorBottomStretch
 $form.Controls.Add($lblStatus)
 
 $lblCopyright = New-Object System.Windows.Forms.LinkLabel
 $lblCopyright.Text = "SSH Relay Manager v$(Get-ToolVersion) - Copyright (C) 2026 SpurGetreide54"
 $lblCopyright.Location = New-Object System.Drawing.Point(12, 485)
 $lblCopyright.Size = New-Object System.Drawing.Size(600, 16)
+$lblCopyright.Anchor = $anchorBottomStretch
 $lblCopyright.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
 $lblCopyright.LinkArea = New-Object System.Windows.Forms.LinkArea(0, $lblCopyright.Text.Length)
 $lblCopyright.Font = New-Object System.Drawing.Font($lblCopyright.Font.FontFamily, 7.5)
