@@ -29,14 +29,13 @@ From now on, double-click the shortcut to start the tool as Administrator.
 
 - **Add Rule**: Enter a name, the VM's IPv6 address, and the ports. Click "Add Rule". The tool creates the relay rule and a matching firewall rule.
 - **Edit Selected**: Select a rule in the list. Click "Edit Selected" to load it into the form, change any field (name, IPv6 address, ports), then click "Save Changes". The tool recreates the relay rule and its firewall rule under the new settings, so the port is briefly unavailable during the save.
-- **Clear**: Resets the form. Also cancels an in-progress edit without applying it.
+- **Clear**: Resets the form.
 - **Delete Selected**: Select a rule in the list. Click "Delete Selected". The tool removes the relay rule and its firewall rule.
 - **Refresh**: Reloads the rule list. The tool also checks the rule list against the live system state on every refresh, so external changes still show up.
-- **Sorting**: Click a column header to sort the list by that column; click again to reverse the order. The list opens sorted by Name ascending (0-9, then a-z). The active column shows a triangle: ▼ ascending, ▲ descending.
 
 After you add a rule, connect from your IPv4-only machine with:
 ```
-ssh -p <listen-port> <host-public-ipv4>
+ssh -p <listen-port> <vm-user>@<host-public-ipv4>
 ```
 
 The tool stores its rules in `rules.json`, next to the script.
