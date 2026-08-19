@@ -233,7 +233,7 @@ $lblStatus.Anchor = $anchorBottomStretch
 $form.Controls.Add($lblStatus)
 
 $lblCopyright = New-Object System.Windows.Forms.LinkLabel
-$lblCopyright.Text = "SSH Relay Manager v$(Get-ToolVersion) - Copyright (C) 2026 SpurGetreide54"
+$lblCopyright.Text = "SSH Relay Manager v$(Get-ToolVersion) - Copyright (C) 2026 SpurGetreide54 - GPL-3.0"
 $lblCopyright.Location = New-Object System.Drawing.Point(12, 485)
 $lblCopyright.Size = New-Object System.Drawing.Size(600, 16)
 $lblCopyright.Anchor = $anchorBottomStretch
