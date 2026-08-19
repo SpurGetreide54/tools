@@ -17,6 +17,8 @@ $script:RulesPath = Join-Path $PSScriptRoot 'rules.json'
 $script:MinPort = 2201
 $script:CurrentRules = @()
 $script:EditingName = $null
+$script:SortColumn = 0
+$script:SortDescending = $false
 
 function Load-Rules {
     if (-not (Test-Path $script:RulesPath)) {
@@ -197,18 +199,28 @@ function Set-Status {
     $lblStatus.ForeColor = if ($IsError) { [System.Drawing.Color]::DarkRed } else { [System.Drawing.Color]::DarkGreen }
 }
 
-function Refresh-ListView {
-    $rules = Sync-Rules
+function Render-RuleList {
+    $sorted = switch ($script:SortColumn) {
+        2 { $script:CurrentRules | Sort-Object -Property { [int]$_.listenPort } -Descending:$script:SortDescending }
+        3 { $script:CurrentRules | Sort-Object -Property { [int]$_.connectPort } -Descending:$script:SortDescending }
+        1 { $script:CurrentRules | Sort-Object -Property ipv6 -Descending:$script:SortDescending }
+        default { $script:CurrentRules | Sort-Object -Property name -Descending:$script:SortDescending }
+    }
     $listView.Items.Clear()
-    foreach ($r in $rules) {
+    foreach ($r in @($sorted)) {
         $item = New-Object System.Windows.Forms.ListViewItem($r.name)
         $item.SubItems.Add($r.ipv6) | Out-Null
         $item.SubItems.Add([string]$r.listenPort) | Out-Null
         $item.SubItems.Add([string]$r.connectPort) | Out-Null
         $listView.Items.Add($item) | Out-Null
     }
+}
+
+function Refresh-ListView {
+    $rules = Sync-Rules
     $script:CurrentRules = $rules
     $numListen.Value = Get-NextFreePort -Rules $rules
+    Render-RuleList
 }
 
 function Reset-EditState {
@@ -344,6 +356,17 @@ $btnClear.Add_Click({
 })
 
 $btnRefresh.Add_Click({ Refresh-ListView; Set-Status 'Refreshed.' })
+
+$listView.Add_ColumnClick({
+    param($sender, $e)
+    if ($script:SortColumn -eq $e.Column) {
+        $script:SortDescending = -not $script:SortDescending
+    } else {
+        $script:SortColumn = $e.Column
+        $script:SortDescending = $false
+    }
+    Render-RuleList
+})
 
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $form.Add_Shown({ Refresh-ListView })

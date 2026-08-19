@@ -32,6 +32,7 @@ From now on, double-click the shortcut to start the tool as Administrator.
 - **Clear**: Resets the form. Also cancels an in-progress edit without applying it.
 - **Delete Selected**: Select a rule in the list. Click "Delete Selected". The tool removes the relay rule and its firewall rule.
 - **Refresh**: Reloads the rule list. The tool also checks the rule list against the live system state on every refresh, so external changes still show up.
+- **Sorting**: Click a column header to sort the list by that column; click again to reverse the order. The list opens sorted by Name ascending (0-9, then a-z).
 
 After you add a rule, connect from your IPv4-only machine with:
 ```
