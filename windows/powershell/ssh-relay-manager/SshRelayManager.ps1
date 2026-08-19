@@ -19,6 +19,7 @@ $script:CurrentRules = @()
 $script:EditingName = $null
 $script:SortColumn = 0
 $script:SortDescending = $false
+$script:ColumnLabels = @('Name', 'IPv6', 'Listen Port', 'Connect Port')
 
 function Load-Rules {
     if (-not (Test-Path $script:RulesPath)) {
@@ -97,10 +98,10 @@ $listView.View = 'Details'
 $listView.FullRowSelect = $true
 $listView.GridLines = $true
 $listView.MultiSelect = $false
-$listView.Columns.Add('Name', 140) | Out-Null
-$listView.Columns.Add('IPv6', 220) | Out-Null
-$listView.Columns.Add('Listen Port', 110) | Out-Null
-$listView.Columns.Add('Connect Port', 110) | Out-Null
+$listView.Columns.Add($script:ColumnLabels[0], 140) | Out-Null
+$listView.Columns.Add($script:ColumnLabels[1], 220) | Out-Null
+$listView.Columns.Add($script:ColumnLabels[2], 110) | Out-Null
+$listView.Columns.Add($script:ColumnLabels[3], 110) | Out-Null
 $form.Controls.Add($listView)
 
 $btnRefresh = New-Object System.Windows.Forms.Button
@@ -199,7 +200,19 @@ function Set-Status {
     $lblStatus.ForeColor = if ($IsError) { [System.Drawing.Color]::DarkRed } else { [System.Drawing.Color]::DarkGreen }
 }
 
+function Update-ColumnHeaders {
+    for ($i = 0; $i -lt $script:ColumnLabels.Count; $i++) {
+        if ($i -eq $script:SortColumn) {
+            $arrow = if ($script:SortDescending) { [char]0x25B2 } else { [char]0x25BC }
+            $listView.Columns[$i].Text = "$($script:ColumnLabels[$i]) $arrow"
+        } else {
+            $listView.Columns[$i].Text = $script:ColumnLabels[$i]
+        }
+    }
+}
+
 function Render-RuleList {
+    Update-ColumnHeaders
     $sorted = switch ($script:SortColumn) {
         2 { $script:CurrentRules | Sort-Object -Property { [int]$_.listenPort } -Descending:$script:SortDescending }
         3 { $script:CurrentRules | Sort-Object -Property { [int]$_.connectPort } -Descending:$script:SortDescending }
