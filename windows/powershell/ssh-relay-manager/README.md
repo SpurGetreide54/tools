@@ -28,6 +28,8 @@ From now on, double-click the shortcut to start the tool as Administrator.
 ## Usage
 
 - **Add Rule**: Enter a name, the VM's IPv6 address, and the ports. Click "Add Rule". The tool creates the relay rule and a matching firewall rule.
+- **Edit Selected**: Select a rule in the list. Click "Edit Selected" to load it into the form, change any field (name, IPv6 address, ports), then click "Save Changes". The tool recreates the relay rule and its firewall rule under the new settings, so the port is briefly unavailable during the save.
+- **Clear**: Resets the form. Also cancels an in-progress edit without applying it.
 - **Delete Selected**: Select a rule in the list. Click "Delete Selected". The tool removes the relay rule and its firewall rule.
 - **Refresh**: Reloads the rule list. The tool also checks the rule list against the live system state on every refresh, so external changes still show up.
 

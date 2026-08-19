@@ -16,6 +16,7 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltinRole]::Adm
 $script:RulesPath = Join-Path $PSScriptRoot 'rules.json'
 $script:MinPort = 2201
 $script:CurrentRules = @()
+$script:EditingName = $null
 
 function Load-Rules {
     if (-not (Test-Path $script:RulesPath)) {
@@ -112,6 +113,12 @@ $btnDelete.Location = New-Object System.Drawing.Point(110, 240)
 $btnDelete.Size = New-Object System.Drawing.Size(120, 28)
 $form.Controls.Add($btnDelete)
 
+$btnEdit = New-Object System.Windows.Forms.Button
+$btnEdit.Text = 'Edit Selected'
+$btnEdit.Location = New-Object System.Drawing.Point(240, 240)
+$btnEdit.Size = New-Object System.Drawing.Size(120, 28)
+$form.Controls.Add($btnEdit)
+
 $groupBox = New-Object System.Windows.Forms.GroupBox
 $groupBox.Text = 'Add Rule'
 $groupBox.Location = New-Object System.Drawing.Point(12, 280)
@@ -173,6 +180,12 @@ $btnAdd.Location = New-Object System.Drawing.Point(10, 115)
 $btnAdd.Size = New-Object System.Drawing.Size(100, 28)
 $groupBox.Controls.Add($btnAdd)
 
+$btnClear = New-Object System.Windows.Forms.Button
+$btnClear.Text = 'Clear'
+$btnClear.Location = New-Object System.Drawing.Point(120, 115)
+$btnClear.Size = New-Object System.Drawing.Size(80, 28)
+$groupBox.Controls.Add($btnClear)
+
 $lblStatus = New-Object System.Windows.Forms.Label
 $lblStatus.Location = New-Object System.Drawing.Point(12, 440)
 $lblStatus.Size = New-Object System.Drawing.Size(600, 40)
@@ -198,18 +211,29 @@ function Refresh-ListView {
     $numListen.Value = Get-NextFreePort -Rules $rules
 }
 
+function Reset-EditState {
+    $script:EditingName = $null
+    $txtName.Clear()
+    $txtIpv6.Clear()
+    $numConnect.Value = 22
+    $numListen.Value = Get-NextFreePort -Rules $script:CurrentRules
+    $groupBox.Text = 'Add Rule'
+    $btnAdd.Text = 'Add Rule'
+}
+
 $btnAdd.Add_Click({
     try {
         $name = $txtName.Text.Trim()
         $ipv6Text = $txtIpv6.Text.Trim()
         $listenPort = [int]$numListen.Value
         $connectPort = [int]$numConnect.Value
+        $wasEditing = [bool]$script:EditingName
 
         if ([string]::IsNullOrWhiteSpace($name)) {
             Set-Status 'Name cannot be empty.' -IsError
             return
         }
-        if ($script:CurrentRules | Where-Object { $_.name -eq $name }) {
+        if ($script:CurrentRules | Where-Object { $_.name -eq $name -and $_.name -ne $script:EditingName }) {
             Set-Status "Name '$name' is already in use." -IsError
             return
         }
@@ -221,9 +245,15 @@ $btnAdd.Add_Click({
             return
         }
 
-        if ($script:CurrentRules | Where-Object { [int]$_.listenPort -eq $listenPort }) {
+        if ($script:CurrentRules | Where-Object { [int]$_.listenPort -eq $listenPort -and $_.name -ne $script:EditingName }) {
             Set-Status "Listen port $listenPort is already in use by another rule." -IsError
             return
+        }
+
+        if ($wasEditing) {
+            $oldRule = $script:CurrentRules | Where-Object { $_.name -eq $script:EditingName } | Select-Object -First 1
+            netsh interface portproxy delete v4tov6 listenport=$($oldRule.listenPort) listenaddress=0.0.0.0 | Out-Null
+            Remove-NetFirewallRule -DisplayName "SSHRelay-$($oldRule.name)" -ErrorAction SilentlyContinue | Out-Null
         }
 
         netsh interface portproxy add v4tov6 listenport=$listenPort listenaddress=0.0.0.0 connectport=$connectPort connectaddress=$ipv6Text | Out-Null
@@ -234,7 +264,7 @@ $btnAdd.Add_Click({
 
         New-NetFirewallRule -DisplayName "SSHRelay-$name" -Direction Inbound -Protocol TCP -LocalPort $listenPort -RemoteAddress Any -Action Allow -ErrorAction Stop | Out-Null
 
-        $rules = @(Load-Rules)
+        $rules = @(Load-Rules | Where-Object { $_.name -ne $script:EditingName })
         $rules += [PSCustomObject]@{
             name        = $name
             ipv6        = $ipv6Text
@@ -243,12 +273,9 @@ $btnAdd.Add_Click({
         }
         Save-Rules $rules
 
-        $txtName.Clear()
-        $txtIpv6.Clear()
-        $numConnect.Value = 22
-
+        Reset-EditState
         Refresh-ListView
-        Set-Status "Rule '$name' added."
+        Set-Status $(if ($wasEditing) { "Rule '$name' updated." } else { "Rule '$name' added." })
     } catch {
         Set-Status "Error: $($_.Exception.Message)" -IsError
     }
@@ -274,11 +301,46 @@ $btnDelete.Add_Click({
         $rules = @(Load-Rules | Where-Object { $_.name -ne $name })
         Save-Rules $rules
 
+        if ($script:EditingName -eq $name) {
+            Reset-EditState
+        }
+
         Refresh-ListView
         Set-Status "Rule '$name' deleted."
     } catch {
         Set-Status "Error: $($_.Exception.Message)" -IsError
     }
+})
+
+$btnEdit.Add_Click({
+    try {
+        if ($listView.SelectedItems.Count -eq 0) {
+            Set-Status 'Select a rule to edit first.' -IsError
+            return
+        }
+        $name = $listView.SelectedItems[0].Text
+        $rule = $script:CurrentRules | Where-Object { $_.name -eq $name } | Select-Object -First 1
+        if (-not $rule) {
+            Set-Status "Could not find rule '$name'." -IsError
+            return
+        }
+
+        $script:EditingName = $rule.name
+        $txtName.Text = $rule.name
+        $txtIpv6.Text = $rule.ipv6
+        $numListen.Value = [int]$rule.listenPort
+        $numConnect.Value = [int]$rule.connectPort
+        $groupBox.Text = "Edit Rule: $($rule.name)"
+        $btnAdd.Text = 'Save Changes'
+        Set-Status "Editing '$($rule.name)'. Update the fields and click Save Changes, or Clear to cancel."
+    } catch {
+        Set-Status "Error: $($_.Exception.Message)" -IsError
+    }
+})
+
+$btnClear.Add_Click({
+    Reset-EditState
+    Set-Status 'Cleared.'
 })
 
 $btnRefresh.Add_Click({ Refresh-ListView; Set-Status 'Refreshed.' })
