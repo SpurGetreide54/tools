@@ -86,7 +86,10 @@ function Sync-Rules {
 function Get-NextFreePort {
     param($Rules)
     $used = @($Rules | ForEach-Object { [int]$_.listenPort })
-    $port = $script:MinPort
+    if ($used.Count -eq 0) {
+        return $script:MinPort
+    }
+    $port = ($used | Measure-Object -Minimum).Minimum
     while ($used -contains $port) { $port++ }
     return $port
 }
