@@ -91,6 +91,25 @@ function Get-NextFreePort {
     return $port
 }
 
+function Set-DestructiveButtonStyle {
+    param($Button)
+    $Button.FlatStyle = 'Flat'
+    $Button.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(150, 60, 60)
+    $Button.FlatAppearance.BorderSize = 1
+    $Button.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(180, 70, 70)
+    $Button.BackColor = [System.Drawing.Color]::IndianRed
+    $Button.ForeColor = [System.Drawing.Color]::White
+    $Button.UseVisualStyleBackColor = $false
+}
+
+function Set-DefaultButtonStyle {
+    param($Button)
+    $Button.FlatStyle = 'Standard'
+    $Button.BackColor = [System.Drawing.SystemColors]::Control
+    $Button.ForeColor = [System.Drawing.SystemColors]::ControlText
+    $Button.UseVisualStyleBackColor = $true
+}
+
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'SSH Relay Manager'
 $form.Size = New-Object System.Drawing.Size(640, 545)
@@ -121,9 +140,7 @@ $btnDelete = New-Object System.Windows.Forms.Button
 $btnDelete.Text = 'Delete Selected'
 $btnDelete.Location = New-Object System.Drawing.Point(110, 240)
 $btnDelete.Size = New-Object System.Drawing.Size(120, 28)
-$btnDelete.BackColor = [System.Drawing.Color]::Firebrick
-$btnDelete.ForeColor = [System.Drawing.Color]::White
-$btnDelete.UseVisualStyleBackColor = $false
+Set-DestructiveButtonStyle $btnDelete
 $form.Controls.Add($btnDelete)
 
 $btnEdit = New-Object System.Windows.Forms.Button
@@ -270,9 +287,7 @@ function Reset-EditState {
     $numListen.Value = Get-NextFreePort -Rules $script:CurrentRules
     $groupBox.Text = 'Add Rule'
     $btnAdd.Text = 'Add Rule'
-    $btnAdd.BackColor = [System.Drawing.SystemColors]::Control
-    $btnAdd.ForeColor = [System.Drawing.SystemColors]::ControlText
-    $btnAdd.UseVisualStyleBackColor = $true
+    Set-DefaultButtonStyle $btnAdd
 }
 
 $btnAdd.Add_Click({
@@ -386,9 +401,7 @@ $btnEdit.Add_Click({
         $numConnect.Value = [int]$rule.connectPort
         $groupBox.Text = "Edit Rule: $($rule.name)"
         $btnAdd.Text = 'Save Changes'
-        $btnAdd.BackColor = [System.Drawing.Color]::Firebrick
-        $btnAdd.ForeColor = [System.Drawing.Color]::White
-        $btnAdd.UseVisualStyleBackColor = $false
+        Set-DestructiveButtonStyle $btnAdd
         Set-Status "Editing '$($rule.name)'. Update the fields and click Save Changes, or Clear to cancel."
     } catch {
         Set-Status "Error: $($_.Exception.Message)" -IsError
