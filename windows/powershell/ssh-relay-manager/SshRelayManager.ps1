@@ -14,6 +14,7 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltinRole]::Adm
 }
 
 $script:RulesPath = Join-Path $PSScriptRoot 'rules.json'
+$script:VersionPath = Join-Path $PSScriptRoot 'VERSION.md'
 $script:MinPort = 2201
 $script:CurrentRules = @()
 $script:EditingName = $null
@@ -35,6 +36,12 @@ function Load-Rules {
 function Save-Rules {
     param($Rules)
     @($Rules) | ConvertTo-Json -Depth 3 | Set-Content -Path $script:RulesPath -Encoding UTF8
+}
+
+function Get-ToolVersion {
+    if (-not (Test-Path $script:VersionPath)) { return 'unknown' }
+    $line = Get-Content -Path $script:VersionPath | Where-Object { $_.Trim() -and -not $_.Trim().StartsWith('#') } | Select-Object -First 1
+    if ($line) { return $line.Trim() } else { return 'unknown' }
 }
 
 function Get-LiveProxyRules {
@@ -86,7 +93,7 @@ function Get-NextFreePort {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'SSH Relay Manager'
-$form.Size = New-Object System.Drawing.Size(640, 520)
+$form.Size = New-Object System.Drawing.Size(640, 545)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -114,6 +121,9 @@ $btnDelete = New-Object System.Windows.Forms.Button
 $btnDelete.Text = 'Delete Selected'
 $btnDelete.Location = New-Object System.Drawing.Point(110, 240)
 $btnDelete.Size = New-Object System.Drawing.Size(120, 28)
+$btnDelete.BackColor = [System.Drawing.Color]::Firebrick
+$btnDelete.ForeColor = [System.Drawing.Color]::White
+$btnDelete.UseVisualStyleBackColor = $false
 $form.Controls.Add($btnDelete)
 
 $btnEdit = New-Object System.Windows.Forms.Button
@@ -194,6 +204,15 @@ $lblStatus.Location = New-Object System.Drawing.Point(12, 440)
 $lblStatus.Size = New-Object System.Drawing.Size(600, 40)
 $form.Controls.Add($lblStatus)
 
+$lblCopyright = New-Object System.Windows.Forms.Label
+$lblCopyright.Text = "SSH Relay Manager v$(Get-ToolVersion) - Copyright (C) 2026 SpurGetreide54"
+$lblCopyright.Location = New-Object System.Drawing.Point(12, 485)
+$lblCopyright.Size = New-Object System.Drawing.Size(600, 16)
+$lblCopyright.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+$lblCopyright.ForeColor = [System.Drawing.SystemColors]::GrayText
+$lblCopyright.Font = New-Object System.Drawing.Font($lblCopyright.Font.FontFamily, 7.5)
+$form.Controls.Add($lblCopyright)
+
 function Set-Status {
     param([string]$Text, [switch]$IsError)
     $lblStatus.Text = $Text
@@ -244,6 +263,9 @@ function Reset-EditState {
     $numListen.Value = Get-NextFreePort -Rules $script:CurrentRules
     $groupBox.Text = 'Add Rule'
     $btnAdd.Text = 'Add Rule'
+    $btnAdd.BackColor = [System.Drawing.SystemColors]::Control
+    $btnAdd.ForeColor = [System.Drawing.SystemColors]::ControlText
+    $btnAdd.UseVisualStyleBackColor = $true
 }
 
 $btnAdd.Add_Click({
@@ -357,6 +379,9 @@ $btnEdit.Add_Click({
         $numConnect.Value = [int]$rule.connectPort
         $groupBox.Text = "Edit Rule: $($rule.name)"
         $btnAdd.Text = 'Save Changes'
+        $btnAdd.BackColor = [System.Drawing.Color]::Firebrick
+        $btnAdd.ForeColor = [System.Drawing.Color]::White
+        $btnAdd.UseVisualStyleBackColor = $false
         Set-Status "Editing '$($rule.name)'. Update the fields and click Save Changes, or Clear to cancel."
     } catch {
         Set-Status "Error: $($_.Exception.Message)" -IsError
